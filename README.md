@@ -9,7 +9,17 @@ npm run build -- --force # regera também as imagens que já existem
 npm run trace            # revetoriza o lettering da 2ª dobra (só se o PNG mudar)
 npm run register         # realinha as mãos da 4ª dobra (só se as imagens mudarem)
 npm run dev              # http://localhost:3004
+npm run deploy           # build + publica no GitHub Pages
 ```
+
+## Publicação
+
+No ar em **https://joaopauloalvesofc-lab.github.io/saggiorato/**.
+
+- `main` guarda o projeto inteiro, inclusive as fontes originais em 8K (518 MB; o fundo vetorial de 99 MB passa com aviso do GitHub, que recomenda até 50 MB).
+- `gh-pages` leva só o que o site serve (72 MB: `index.html` e `assets/`), e é dela que o Pages publica. `npm run deploy` reconstrói e atualiza essa branch.
+- O repositório precisou virar público: GitHub Pages não funciona em repositório privado na conta gratuita.
+- Conferido no ar: carrega em 1,0 s, hero com erro de 1,00/255 contra a referência, as seis dobras revelam, o vídeo toca, as quatro fontes carregam, nenhuma imagem quebrada, nenhum erro de JavaScript e nenhuma rolagem lateral no celular. Os tipos de arquivo saem certos (AVIF, WebP, WOFF2, MP4, SVG).
 
 O markup entre os marcadores `<!-- preload -->`, `<!-- hero -->`, `<!-- atelier -->`, `<!-- luxury-bg -->`, `<!-- luxury-gallery -->`, `<!-- handmade-* -->` e `<!-- duffle-* -->` é gerado pelo build (`scripts/build.mjs`, `atelier.mjs`, `luxury.mjs`, `handmade.mjs` e `duffle.mjs`): não edite à mão. O texto e o mockup do iPhone da terceira dobra ficam escritos direto no `index.html` e podem ser editados.
 

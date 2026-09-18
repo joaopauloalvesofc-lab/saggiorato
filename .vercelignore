@@ -1,0 +1,10 @@
+# A Vercel só precisa do site pronto. As fontes originais (446 MB em 8K), os
+# scripts de build e as dependências ficam de fora: deploy leve e rápido.
+source/
+scripts/
+node_modules/
+package.json
+package-lock.json
+serve.json
+README.md
+.gitignore

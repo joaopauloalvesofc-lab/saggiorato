@@ -1797,9 +1797,22 @@ main {
 }
 
 @media (max-width: 1023px) {
+  /* A foto do couro é larga (2,4:1). Num rodapé alto e estreito ela precisaria
+     de ~7000 px para cobrir: dava zoom de 18× e textura borrada. Aqui entra o
+     ladrilho sem emenda, repetido na escala natural do couro. */
   .rodape {
     padding-top: clamp(56px, 8vh, 96px);
     text-align: center;
+    background-image: image-set(
+      url('../img/rodape/couro-tile.avif') type('image/avif'),
+      url('../img/rodape/couro-tile.webp') type('image/webp')
+    );
+    background-repeat: repeat;
+    background-size: clamp(300px, 78vw, 520px);
+  }
+
+  .rodape__bg {
+    display: none;
   }
 
   /* Alvo de toque confortável nos links. */

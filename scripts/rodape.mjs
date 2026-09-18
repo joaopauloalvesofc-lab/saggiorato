@@ -25,8 +25,44 @@ async function encode(pipeline, base, { avif, webp }) {
   await raw().webp(webp).toFile(`${base}.webp`);
 }
 
+// Ladrilho sem emenda: no celular o rodapé é alto e estreito, e a foto (2,4:1)
+// precisaria de ~7000 px de largura para cobrir — dava zoom de 18× e textura
+// borrada. Um recorte espelhado nos quatro sentidos fecha sem emenda e se
+// repete na escala natural do couro.
+async function buildTile(root, force) {
+  const base = `${root}${OUT}couro-tile`;
+  if (!force && existsSync(`${base}.avif`) && existsSync(`${base}.webp`)) return;
+  const lado = 600;
+  // Região de iluminação uniforme (longe do brilho central e das bordas).
+  const recorte = await sharp(`${root}${SRC}`, { limitInputPixels: false })
+    .extract({ left: 150, top: 0, width: lado, height: lado })
+    .toColourspace('srgb')
+    .png()
+    .toBuffer();
+  const espelhoH = await sharp(recorte).flop().png().toBuffer();
+  const espelhoV = await sharp(recorte).flip().png().toBuffer();
+  const espelhoHV = await sharp(recorte).flip().flop().png().toBuffer();
+  const ladrilho = await sharp({ create: { width: lado * 2, height: lado * 2, channels: 3, background: '#000' } })
+    .composite([
+      { input: recorte, left: 0, top: 0 },
+      { input: espelhoH, left: lado, top: 0 },
+      { input: espelhoV, left: 0, top: lado },
+      { input: espelhoHV, left: lado, top: lado },
+    ])
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  // Textura de grão fino é cara de comprimir: q72 mantém o grão e fica ~4× mais
+  // leve do que a foto de 3840 px que ela substitui no celular.
+  await encode(sharp(ladrilho.data, { raw: ladrilho.info }), base, {
+    avif: { quality: 72, effort: 6 },
+    webp: { quality: 82, effort: 6, smartSubsample: true },
+  });
+  console.log(`ladrilho do couro: ${lado * 2}×${lado * 2} sem emenda (espelhado)`);
+}
+
 export async function buildRodape({ root, force }) {
   await mkdir(`${root}${OUT}`, { recursive: true });
+  await buildTile(root, force);
   for (const width of WIDTHS) {
     const base = `${root}${OUT}couro-preto-${width}`;
     if (!force && existsSync(`${base}.avif`) && existsSync(`${base}.webp`)) continue;

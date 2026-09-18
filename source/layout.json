@@ -1,0 +1,67 @@
+{
+  "reference": {
+    "width": 1170,
+    "height": 1557
+  },
+  "desktop": {
+    "width": 7680,
+    "height": 4320,
+    "aspect_ratio": "16:9"
+  },
+  "generated_background_native": {
+    "width": 1672,
+    "height": 941
+  },
+  "background_8k": {
+    "method": "Lanczos3 resampling; no claim of native 8K detail"
+  },
+  "typography": {
+    "fill": "#FFFFFF",
+    "format": "SVG paths; no fonts; no embedded raster"
+  },
+  "placement": {
+    "reference_to_desktop_scale": 2.7745664739884393,
+    "reference_x_offset": 2216.878612716763
+  },
+  "layers": [
+    {
+      "name": "wordmark",
+      "reference_bounds": [
+        253.76027460929257,
+        517.8785745591389,
+        659.1572505936472,
+        241.48803762933255
+      ],
+      "contours": 20,
+      "bezier_segments": 679
+    },
+    {
+      "name": "est_sao_paulo",
+      "reference_bounds": [
+        430.1913104127782,
+        410.56820004676484,
+        306.131453657184,
+        29.326295418587733
+      ],
+      "contours": 18,
+      "bezier_segments": 277
+    },
+    {
+      "name": "time_purpose_craft",
+      "reference_bounds": [
+        299.4831038247174,
+        871.8395660542983,
+        584.620503487974,
+        27.896263078098286
+      ],
+      "contours": 28,
+      "bezier_segments": 471
+    }
+  ],
+  "symbol": {
+    "reference_x": 547.42,
+    "reference_y": 977.57,
+    "reference_width": 63.15,
+    "reference_height": 70.51
+  }
+}

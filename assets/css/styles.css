@@ -1,0 +1,1866 @@
+:root {
+  --night: #030303;
+  --ink: #fff;
+  --gutter: clamp(16px, 5vw, 48px);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--ink);
+}
+
+/* Links do rodapé levam às dobras com rolagem suave. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------ hero
+   O palco é sempre 16:9 e cobre a tela inteira (como object-fit: cover).
+   Foto e marca moram no mesmo palco, então a marca nunca se desloca em
+   relação aos estojos, qualquer que seja a proporção da tela. */
+
+.hero {
+  position: relative;
+  height: 100vh;
+  height: 100svh;
+  min-height: 320px;
+  overflow: hidden;
+  container-type: size;
+  isolation: isolate;
+  background: var(--night);
+}
+
+.hero__stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100cqw, 100cqh * 16 / 9);
+  aspect-ratio: 16 / 9;
+  translate: -50% -50%;
+}
+
+.hero__lqip,
+.hero__photo,
+.hero__photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero__lqip {
+  background-position: center;
+  background-size: cover;
+  filter: blur(24px);
+  scale: 1.06;
+}
+
+.hero__photo img {
+  display: block;
+  object-fit: cover;
+}
+
+/* Bloco da marca, centrado no ponto da referência. Em telas estreitas a
+   largura é limitada para a assinatura não encostar nas bordas. */
+.hero__lockup {
+  position: absolute;
+  top: var(--cy);
+  left: var(--cx);
+  width: min(var(--lockup-w), 100cqw - 2 * var(--gutter));
+  aspect-ratio: var(--lockup-ratio);
+  translate: -50% -50%;
+}
+
+.hero__piece {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  width: var(--w);
+  height: var(--h);
+  margin: 0;
+  color: var(--ink);
+}
+
+.hero__piece svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+/* ------------------------------------------------------------ entrada
+   Sem JS nada fica escondido. Com JS, a foto entra sobre a prévia borrada
+   e a marca aparece em sequência: EST. SÃO PAULO, assinatura escrita da
+   esquerda para a direita, TIME © PURPOSE © CRAFT e o monograma. */
+
+.js .hero__photo {
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+.js .hero.is-ready .hero__photo {
+  opacity: 1;
+}
+
+.js .hero.is-ready .hero__lqip {
+  visibility: hidden;
+  transition: visibility 0s 1.2s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .hero__stage {
+    scale: 1.045;
+    transition: scale 3.4s var(--ease-out);
+  }
+
+  .js .hero.is-ready .hero__stage {
+    scale: 1;
+  }
+
+  .js .hero:not(.is-ready) .hero__piece {
+    opacity: 0;
+  }
+
+  .js .hero.is-ready .hero__piece {
+    animation: hero-rise 1.3s var(--ease-out) var(--delay) backwards;
+  }
+
+  /* Máscara com 230% da largura: em 100% a peça está oculta, em 0% está
+     inteira; a borda suave (≈23% da largura) é a "tinta" avançando. */
+  .js .hero.is-ready .hero__wordmark {
+    animation-duration: 0.5s;
+  }
+
+  .js .hero.is-ready .hero__wordmark svg {
+    -webkit-mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+    mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+    -webkit-mask-size: 230% 100%;
+    mask-size: 230% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+    animation: hero-ink 1.7s cubic-bezier(0.55, 0.1, 0.3, 1) var(--delay) backwards;
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    translate: 0 0.9cqh;
+  }
+}
+
+@keyframes hero-ink {
+  from {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+}
+
+/* --------------------------------------------------------------- atelier
+   Palco 1920 × 800 (proporção da referência) em unidades --u. Em celular o
+   palco cresce até a marca ocupar ~84% da largura (409cqw); entre 391 e
+   1600 px fica em 1600 px; em telas ultralargas e baixas é limitado pela
+   altura da tela. Geometria da roda vem do build (style do palco). */
+
+main {
+  container-type: inline-size;
+}
+
+.atelier {
+  --stage-w: min(max(100cqw, min(409cqw, 1600px)), 240svh);
+  --u: calc(var(--stage-w) / 1920);
+  --orbit-period: 80s;
+  --shadow-rgb: 8 0 3;
+  position: relative;
+  height: calc(var(--stage-w) / 2.4);
+  overflow: hidden;
+  isolation: isolate;
+  background: #582732;
+}
+
+.atelier__bg,
+.atelier__bg img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.atelier__bg img {
+  display: block;
+  object-fit: cover;
+}
+
+.atelier__stage {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--stage-w);
+  height: 100%;
+  translate: -50% 0;
+}
+
+/* Cada roda é um ponto no centro do círculo. Os cards giram em volta dele
+   com transform-origin no centro da roda, então só "rotate" anima (GPU). */
+.atelier__orbit {
+  position: absolute;
+  top: calc(var(--u) * var(--orbit-cy));
+  left: calc(var(--u) * var(--orbit-cx));
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cada roda de sombra é a mesma roda deslocada para baixo: a luz vem sempre
+   de cima, qualquer que seja o ângulo do card. Duas camadas: uma próxima e
+   definida, outra longa e difusa. */
+.atelier__orbit--shadow-near {
+  translate: 0 calc(var(--u) * 20);
+}
+
+.atelier__orbit--shadow-far {
+  translate: 0 calc(var(--u) * 66);
+}
+
+.orbit__item {
+  --r: calc(var(--u) * var(--orbit-r));
+  position: absolute;
+  top: calc(-1 * var(--r) - var(--u) * var(--h) / 2);
+  left: calc(var(--u) * var(--w) / -2);
+  width: calc(var(--u) * var(--w));
+  height: calc(var(--u) * var(--h));
+  transform-origin: 50% calc(50% + var(--r));
+  rotate: calc(var(--orbit-step) * var(--k));
+}
+
+.orbit__shadow {
+  position: absolute;
+  inset: 1%;
+  border-radius: calc(var(--u) * var(--card-radius) * 1.5);
+  background: rgb(var(--shadow-rgb) / 0.8);
+  filter: blur(calc(var(--u) * 14));
+}
+
+.atelier__orbit--shadow-far .orbit__shadow {
+  inset: 2% 1%;
+  border-radius: calc(var(--u) * var(--card-radius) * 3);
+  background: rgb(var(--shadow-rgb) / 0.95);
+  filter: blur(calc(var(--u) * 52));
+}
+
+.orbit__card {
+  border-radius: calc(var(--u) * var(--card-radius));
+  background: rgb(var(--shadow-rgb));
+  box-shadow:
+    0 0 calc(var(--u) * 2) rgb(var(--shadow-rgb) / 0.4),
+    0 0 calc(var(--u) * 14) rgb(var(--shadow-rgb) / 0.28);
+}
+
+.orbit__card picture,
+.orbit__card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.orbit__card img {
+  object-fit: cover;
+}
+
+/* Filete de luz na borda, como papel fotográfico. */
+.orbit__card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 calc(var(--u) * 0.8) rgb(255 255 255 / 0.08);
+  pointer-events: none;
+}
+
+.atelier__lockup {
+  position: absolute;
+  top: calc(var(--u) * var(--y));
+  left: calc(var(--u) * var(--x));
+  width: calc(var(--u) * var(--w));
+  aspect-ratio: var(--ratio);
+}
+
+.atelier__piece {
+  position: absolute;
+  top: var(--py);
+  left: var(--px);
+  width: var(--pw);
+  height: var(--ph);
+  margin: 0;
+}
+
+.atelier__piece img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .orbit__item {
+    animation: orbit-spin var(--orbit-period) linear infinite;
+    animation-delay: calc(var(--orbit-period) * var(--k) / var(--orbit-slots) * -1);
+  }
+
+  /* Parada fora da tela (economia de bateria) e sob o cursor, para quem quer
+     olhar uma foto com calma. Sombras param junto: mesmo seletor. */
+  .js .atelier:not(.is-inview) .orbit__item {
+    animation-play-state: paused;
+  }
+
+  @media (hover: hover) {
+    .atelier:has(.orbit__card:hover) .orbit__item {
+      animation-play-state: paused;
+    }
+  }
+
+  /* Entrada: a roda chega girando e desacelera; a marca aparece em sequência,
+     com as duas linhas manuscritas "escritas" como no hero. */
+  .js .atelier__orbit {
+    transition:
+      rotate 3.2s var(--ease-out),
+      opacity 1.4s ease;
+  }
+
+  .js .atelier:not(.is-revealed) .atelier__orbit {
+    opacity: 0;
+    rotate: -32deg;
+  }
+
+  .js .atelier:not(.is-revealed) .atelier__piece {
+    opacity: 0;
+  }
+
+  .js .atelier.is-revealed .atelier__piece {
+    animation: hero-rise 1.3s var(--ease-out) var(--delay) backwards;
+  }
+
+  .js .atelier.is-revealed .atelier__piece--ink {
+    animation-duration: 0.6s;
+  }
+
+  .js .atelier.is-revealed .atelier__piece--ink img {
+    -webkit-mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+    mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+    -webkit-mask-size: 230% 100%;
+    mask-size: 230% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+    animation: hero-ink 1.7s cubic-bezier(0.55, 0.1, 0.3, 1) var(--delay) backwards;
+  }
+}
+
+@keyframes orbit-spin {
+  from {
+    rotate: 0deg;
+  }
+
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* ---------------------------------------------------------------- luxury
+   Terceira dobra: The Luxury Box. Fontes auto-hospedadas (subconjunto latin,
+   cobre o português): Rouge Script (título, a caligrafia mais próxima de "The
+   Handmade Design") e Cormorant Garamond variável (texto fino). */
+
+@font-face {
+  font-family: 'Rouge Script';
+  src: url('../fonts/rouge-script-400-latin.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('../fonts/cormorant-garamond-latin.woff2') format('woff2');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('../fonts/cormorant-garamond-italic-latin.woff2') format('woff2');
+  font-weight: 300 700;
+  font-style: italic;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+.luxury {
+  --lux-ink: #f4ede3;
+  --lux-shadow: 12 7 3;
+  --device-h: clamp(480px, min(84svh, 48vw), 940px);
+  --gallery-gap: clamp(12px, 1.2vw, 22px);
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-block: clamp(56px, 8svh, 120px);
+  padding-inline: var(--gutter);
+  overflow: hidden;
+  isolation: isolate;
+  background: #1b0f08;
+  color: var(--lux-ink);
+}
+
+.luxury__bg,
+.luxury__bg img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+}
+
+.luxury__bg img {
+  display: block;
+  object-fit: cover;
+}
+
+/* Verniz escuro sobre a madeira: mais leve atrás do iPhone, mais denso atrás
+   do texto, com vinheta e uma sombra na emenda com a dobra de cima. */
+.luxury::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgb(0 0 0 / 0.5) 0, rgb(0 0 0 / 0) clamp(80px, 12vh, 160px)),
+    radial-gradient(130% 110% at 28% 50%, rgb(var(--lux-shadow) / 0) 35%, rgb(var(--lux-shadow) / 0.55) 100%),
+    linear-gradient(90deg, rgb(var(--lux-shadow) / 0.5) 0%, rgb(var(--lux-shadow) / 0.42) 34%, rgb(var(--lux-shadow) / 0.74) 58%, rgb(var(--lux-shadow) / 0.82) 100%);
+}
+
+/* Coluna de conteúdo com a largura da galeria e conjunto centralizado:
+   margens laterais iguais em qualquer largura. */
+.luxury__inner {
+  display: grid;
+  grid-template-columns: auto minmax(0, calc(var(--device-h) * 1.05 + 3 * var(--gallery-gap)));
+  justify-content: center;
+  align-items: stretch;
+  column-gap: clamp(56px, 7vw, 140px);
+  width: 100%;
+}
+
+/* ------------------------------------------------ iPhone 17
+   Medidas reais em mm (71,5 × 149,6; tela 6,3" com cantos de 10,3 mm; ilha
+   dinâmica 20,7 × 6,15 mm) convertidas por --mm, relativo à largura do
+   aparelho. */
+
+.luxury__device {
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+}
+
+.iphone {
+  --mm: calc(100cqw / 71.5);
+  position: relative;
+  width: calc(var(--device-h) * 71.5 / 149.6);
+  height: var(--device-h);
+  container-type: inline-size;
+}
+
+.iphone__frame {
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--mm) * 12.9);
+  /* Alumínio anodizado preto: reflexos variam ao redor do perímetro. */
+  background:
+    conic-gradient(from 200deg at 50% 50%, #6c6c72 0deg, #1d1d20 40deg, #3b3b40 80deg, #111113 130deg, #4e4e54 175deg, #16161a 220deg, #5a5a60 270deg, #1a1a1d 320deg, #6c6c72 360deg);
+  box-shadow:
+    inset 0 0 0 calc(var(--mm) * 0.14) rgb(255 255 255 / 0.34),
+    inset 0 0 0 calc(var(--mm) * 0.42) rgb(0 0 0 / 0.28),
+    inset 0 0 calc(var(--mm) * 0.6) calc(var(--mm) * 0.25) rgb(0 0 0 / 0.55),
+    0 calc(var(--mm) * 1) calc(var(--mm) * 2) rgb(var(--lux-shadow) / 0.6),
+    0 calc(var(--mm) * 14) calc(var(--mm) * 24) calc(var(--mm) * -3) rgb(var(--lux-shadow) / 0.7),
+    0 calc(var(--mm) * 32) calc(var(--mm) * 56) calc(var(--mm) * -8) rgb(var(--lux-shadow) / 0.55);
+}
+
+.iphone__glass {
+  position: absolute;
+  inset: calc(var(--mm) * 0.95);
+  border-radius: calc(var(--mm) * 11.95);
+  background: #030303;
+  box-shadow: inset 0 0 0 calc(var(--mm) * 0.12) rgb(255 255 255 / 0.07);
+}
+
+.iphone__screen {
+  position: absolute;
+  inset: calc(var(--mm) * 1.5);
+  overflow: hidden;
+  border-radius: calc(var(--mm) * 10.3);
+  background: #000;
+  /* Safari só recorta vídeo com border-radius numa camada própria. */
+  transform: translateZ(0);
+}
+
+.iphone__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iphone__island {
+  position: absolute;
+  top: calc(var(--mm) * 1.85);
+  left: 50%;
+  width: calc(var(--mm) * 20.7);
+  height: calc(var(--mm) * 6.15);
+  border-radius: 999px;
+  background: #000;
+  translate: -50% 0;
+}
+
+/* Lente da câmera frontal dentro da ilha. */
+.iphone__island::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: calc(var(--mm) * 2.6);
+  width: calc(var(--mm) * 2.3);
+  height: calc(var(--mm) * 2.3);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgb(90 110 160 / 0.55) 0, rgb(20 24 40 / 0.9) 32%, #050508 62%);
+  translate: 0 -50%;
+}
+
+.iphone__glare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(118deg, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0.035) 24%, rgb(255 255 255 / 0) 40%, rgb(255 255 255 / 0) 76%, rgb(255 255 255 / 0.03) 100%);
+  pointer-events: none;
+}
+
+.iphone__button {
+  position: absolute;
+  width: calc(var(--mm) * 1.3);
+  border-radius: calc(var(--mm) * 0.5);
+  background: linear-gradient(90deg, #1a1a1d, #6a6a70 45%, #2a2a2e 70%, #111113);
+  box-shadow: 0 0 calc(var(--mm) * 0.4) rgb(0 0 0 / 0.5);
+}
+
+.iphone__button--action,
+.iphone__button--volume-up,
+.iphone__button--volume-down {
+  left: calc(var(--mm) * -0.85);
+}
+
+.iphone__button--side,
+.iphone__button--camera {
+  right: calc(var(--mm) * -0.85);
+}
+
+.iphone__button--action {
+  top: calc(var(--mm) * 29.5);
+  height: calc(var(--mm) * 7.2);
+}
+
+.iphone__button--volume-up {
+  top: calc(var(--mm) * 42.5);
+  height: calc(var(--mm) * 12.5);
+}
+
+.iphone__button--volume-down {
+  top: calc(var(--mm) * 58.5);
+  height: calc(var(--mm) * 12.5);
+}
+
+.iphone__button--side {
+  top: calc(var(--mm) * 45.5);
+  height: calc(var(--mm) * 19.5);
+}
+
+/* Camera Control: safira quase rente à lateral. */
+.iphone__button--camera {
+  right: calc(var(--mm) * -0.45);
+  top: calc(var(--mm) * 91);
+  height: calc(var(--mm) * 16);
+  background: linear-gradient(90deg, #060607, #25262b 50%, #09090b);
+}
+
+.iphone__toggle {
+  position: absolute;
+  inset: calc(var(--mm) * 2.45);
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--mm) * 10.3);
+  background: transparent;
+  cursor: pointer;
+}
+
+.iphone__toggle:focus-visible {
+  outline: 2px solid rgb(244 237 227 / 0.85);
+  outline-offset: calc(var(--mm) * 3.5);
+}
+
+/* Ícone de "play" só quando a pessoa pausou (ou pediu menos movimento). */
+.iphone__toggle::before,
+.iphone__toggle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  opacity: 0;
+  translate: -50% -50%;
+  transition: opacity 0.4s ease;
+}
+
+.iphone__toggle::before {
+  width: calc(var(--mm) * 15);
+  height: calc(var(--mm) * 15);
+  border: 1px solid rgb(255 255 255 / 0.35);
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.35);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.iphone__toggle::after {
+  width: calc(var(--mm) * 4.6);
+  height: calc(var(--mm) * 5.4);
+  margin-left: calc(var(--mm) * 0.7);
+  background: var(--lux-ink);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.luxury.is-video-paused .iphone__toggle::before,
+.luxury.is-video-paused .iphone__toggle::after {
+  opacity: 1;
+}
+
+/* ------------------------------------------------ conteúdo */
+
+/* Mesma altura do aparelho: o topo do título e a base da galeria alinham
+   exatamente com o topo e a base do iPhone. */
+.luxury__content {
+  display: flex;
+  flex-direction: column;
+  min-height: var(--device-h);
+}
+
+/* Folga em volta do título: as laçadas da caligrafia passam da caixa da
+   linha e seriam cortadas pela máscara da animação. A margem de cima tem
+   0,05em a mais para o topo visível das letras (não o da caixa da fonte)
+   alinhar com o topo do iPhone (medido em 7 tamanhos de tela). */
+.luxury__title {
+  margin: -0.19em -0.5em -0.22em -0.12em;
+  padding: 0.14em 0.5em 0.22em 0.12em;
+  font-family: 'Rouge Script', 'Snell Roundhand', cursive;
+  font-size: clamp(64px, min(7.4vw, 13.2svh), 148px);
+  font-weight: 400;
+  line-height: 0.95;
+  color: var(--lux-ink);
+  text-shadow: 0 2px 28px rgb(0 0 0 / 0.35);
+}
+
+.luxury__head::after {
+  content: '';
+  display: block;
+  width: clamp(48px, 4vw, 76px);
+  height: 1px;
+  margin-top: clamp(18px, 2.4vh, 30px);
+  background: linear-gradient(90deg, rgb(244 237 227 / 0.6), rgb(244 237 227 / 0));
+  transform-origin: left center;
+}
+
+.luxury__text {
+  max-width: 34em;
+  margin-top: clamp(16px, 2.2vh, 28px);
+  margin-bottom: clamp(28px, 4vh, 56px);
+  font-family: 'Cormorant Garamond', Garamond, 'Times New Roman', serif;
+  font-size: clamp(17px, min(1.28vw, 2.1svh), 23px);
+  font-weight: 300;
+  line-height: 1.6;
+  color: rgb(244 237 227 / 0.84);
+}
+
+.luxury__text p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.luxury__text p + p {
+  margin-top: 0.7em;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.luxury__lead {
+  text-wrap: balance;
+  font-size: 1.3em;
+  font-style: italic;
+  line-height: 1.32;
+  color: var(--lux-ink);
+}
+
+.luxury__gallery {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--gallery-gap);
+  /* Fotos com 35% da altura do aparelho; a sobra de espaço fica acima da
+     galeria (margin-top: auto), que encosta na base do iPhone. */
+  width: 100%;
+  margin: auto 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.luxury__photo {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  border-radius: clamp(10px, 0.9vw, 16px);
+  background: #140b06;
+  box-shadow:
+    0 1px 2px rgb(var(--lux-shadow) / 0.55),
+    0 12px 26px -6px rgb(var(--lux-shadow) / 0.6),
+    0 32px 60px -18px rgb(var(--lux-shadow) / 0.65);
+}
+
+.luxury__photo picture,
+.luxury__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.luxury__photo img {
+  object-fit: cover;
+  transition: scale 1.2s var(--ease-out);
+}
+
+.luxury__photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .luxury__photo:hover img {
+    scale: 1.045;
+  }
+}
+
+/* ------------------------------------------------ telas estreitas
+   Coluna única: título, iPhone, texto e galeria. A madeira ocupa 200% da
+   largura (os veios são verticais, então esticar na altura mantém o
+   desenho) para não virar listras gigantes numa seção alta e estreita. */
+
+@media (max-width: 1023px) {
+  .luxury {
+    --device-h: clamp(440px, 70svh, 620px);
+    padding-block: clamp(64px, 10svh, 104px);
+  }
+
+  .luxury__bg img {
+    left: -50%;
+    width: 200%;
+    object-fit: fill;
+  }
+
+  .luxury::before {
+    background:
+      linear-gradient(180deg, rgb(0 0 0 / 0.5) 0, rgb(0 0 0 / 0) 120px),
+      radial-gradient(120% 60% at 50% 45%, rgb(var(--lux-shadow) / 0.35) 0%, rgb(var(--lux-shadow) / 0.7) 100%),
+      linear-gradient(rgb(var(--lux-shadow) / 0.35), rgb(var(--lux-shadow) / 0.35));
+  }
+
+  .luxury__inner {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    row-gap: clamp(36px, 6vh, 56px);
+    text-align: center;
+  }
+
+  .luxury__content {
+    display: contents;
+  }
+
+  .luxury__head {
+    grid-row: 1;
+  }
+
+  /* A Rouge Script ocupa ~5,1em em "The Luxury Box": 15,5vw cabe numa linha
+     com as margens laterais, de 320 px de largura em diante. */
+  .luxury__title {
+    font-size: clamp(48px, 15.5vw, 104px);
+    white-space: nowrap;
+  }
+
+  .luxury__text {
+    font-size: clamp(18px, 2.4vw, 21px);
+  }
+
+  .luxury__head::after {
+    margin-inline: auto;
+    background: linear-gradient(90deg, rgb(244 237 227 / 0), rgb(244 237 227 / 0.6), rgb(244 237 227 / 0));
+    transform-origin: center;
+  }
+
+  .luxury__device {
+    grid-row: 2;
+  }
+
+  .luxury__text {
+    grid-row: 3;
+    margin-block: 0;
+  }
+
+  .luxury__gallery {
+    grid-row: 4;
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .luxury__content {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 599px) {
+  .luxury__gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ------------------------------------------------ entrada */
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .luxury:not(.is-revealed) [data-reveal],
+  .js .luxury:not(.is-revealed) .luxury__photo {
+    opacity: 0;
+  }
+
+  .js .luxury:not(.is-revealed) .luxury__head::after {
+    scale: 0 1;
+  }
+
+  .js .luxury.is-revealed [data-reveal],
+  .js .luxury.is-revealed .luxury__photo {
+    animation: hero-rise 1.3s var(--ease-out) var(--delay, 0s) backwards;
+  }
+
+  .js .luxury.is-revealed .luxury__device {
+    animation-duration: 1.8s;
+  }
+
+  .js .luxury.is-revealed .luxury__title {
+    -webkit-mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+    mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+    -webkit-mask-size: 230% 100%;
+    mask-size: 230% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+    animation:
+      hero-rise 0.6s var(--ease-out) var(--delay) backwards,
+      hero-ink 1.8s cubic-bezier(0.55, 0.1, 0.3, 1) var(--delay) backwards;
+  }
+
+  .js .luxury.is-revealed .luxury__head::after {
+    transition: scale 1.4s var(--ease-out) 1s;
+  }
+}
+
+/* -------------------------------------------------------------- handmade
+   Quarta dobra. A mão sai do topo e da direita da imagem, então o quadro fica
+   ancorado no canto superior direito da seção: a manga continua para fora da
+   tela, como numa fotografia. O quadro ocupa 93% da altura (respiro abaixo do
+   estojo) e no máximo 58vw, para sobrar espaço ao título. As cinco mãos estão
+   registradas no mesmo quadro (scripts/register-hands.mjs): trocar de modelo
+   muda só o estojo. */
+
+.handmade {
+  --section-h: max(100svh, 640px);
+  --frame-w: min(var(--section-h) * 0.93 * 2470 / 2499, 58vw);
+  --ink: #f4ede3;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--frame-w);
+  height: 100vh;
+  height: var(--section-h);
+  overflow: hidden;
+  isolation: isolate;
+  background: #0c1a12;
+  color: var(--ink);
+}
+
+.handmade__bg,
+.handmade__bg img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+}
+
+.handmade__bg img {
+  display: block;
+  object-fit: cover;
+}
+
+/* Couro um pouco mais escuro nas bordas e na emenda com a dobra de cima. */
+.handmade::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgb(0 0 0 / 0.45) 0, rgb(0 0 0 / 0) clamp(80px, 12vh, 160px)),
+    radial-gradient(120% 100% at 30% 45%, rgb(2 8 5 / 0) 40%, rgb(2 8 5 / 0.5) 100%);
+}
+
+.handmade__hand {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  width: var(--frame-w);
+  aspect-ratio: 2470 / 2499;
+}
+
+/* Sombra suave para baixo e para a direita: a luz do couro vem do alto à
+   esquerda. Cada imagem tem a própria sombra (rasterizada uma vez).
+
+   Troca sem "buraco": a nova mão entra por cima (z-index 2) enquanto a
+   anterior continua 100% opaca por baixo; só depois a anterior some. Num
+   cross-fade simples as duas ficariam a 50% e a mão cobriria só 75%. */
+.handmade__image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  visibility: hidden;
+  filter: drop-shadow(calc(var(--frame-w) * 0.012) calc(var(--frame-w) * 0.026) calc(var(--frame-w) * 0.03) rgb(0 6 3 / 0.55));
+  transition:
+    opacity 0.3s ease,
+    visibility 0s linear 0.3s;
+}
+
+.handmade__image.is-active {
+  z-index: 2;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.6s ease,
+    visibility 0s;
+}
+
+.handmade__image.is-leaving {
+  z-index: 1;
+  opacity: 0;
+  visibility: visible;
+  transition:
+    opacity 0.3s ease 0.6s,
+    visibility 0s linear 0.9s;
+}
+
+.handmade__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.handmade__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  /* Cresce em telas grandes para acompanhar a escala da mão. */
+  width: min(100%, clamp(700px, 36vw, 980px));
+  padding-inline: var(--gutter);
+}
+
+.handmade__title {
+  width: 100%;
+  margin: 0;
+}
+
+.handmade__title img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.handmade__models {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(10px, 1vw, 16px);
+  margin-top: clamp(44px, 7vh, 88px);
+}
+
+.handmade__swatch {
+  position: relative;
+  width: clamp(54px, 4.2vw, 104px);
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: clamp(8px, 0.6vw, 11px);
+  background: #0a130d;
+  box-shadow: 0 10px 22px -8px rgb(0 0 0 / 0.7);
+  cursor: pointer;
+  outline: 1.5px solid transparent;
+  outline-offset: 5px;
+  transition:
+    translate 0.5s var(--ease-out),
+    outline-color 0.4s ease,
+    opacity 0.4s ease;
+}
+
+.handmade__swatch picture,
+.handmade__swatch img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.handmade__swatch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  pointer-events: none;
+}
+
+.handmade__swatch[aria-checked='true'] {
+  outline-color: rgb(244 237 227 / 0.9);
+}
+
+.handmade__swatch:focus-visible:not([aria-checked='true']) {
+  outline-color: rgb(244 237 227 / 0.55);
+  outline-style: dashed;
+}
+
+@media (hover: hover) {
+  .handmade__swatch:hover {
+    translate: 0 -3px;
+  }
+}
+
+.handmade__model-name {
+  min-height: 1.3em;
+  margin: clamp(16px, 2.2vh, 24px) 0 0;
+  font-family: 'Cormorant Garamond', Garamond, 'Times New Roman', serif;
+  font-size: clamp(19px, 1.35vw, 24px);
+  font-style: italic;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: rgb(244 237 227 / 0.82);
+}
+
+/* ------------------------------------------------ empilhado
+   Celular e telas em retrato: a mão vem primeiro, saindo do topo da seção,
+   e o título com os quadrados logo abaixo. */
+
+@media (max-width: 900px), (max-aspect-ratio: 1/1) {
+  .handmade {
+    --frame-w: min(100vw, 72svh);
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    padding-bottom: clamp(56px, 10vh, 104px);
+  }
+
+  .handmade__hand {
+    grid-column: 1;
+    justify-self: end;
+  }
+
+  .handmade__content {
+    grid-row: 2;
+    margin-top: clamp(4px, 2vh, 24px);
+  }
+
+  .handmade__title {
+    width: min(100%, 520px);
+  }
+
+  .handmade__models {
+    margin-top: clamp(32px, 5vh, 48px);
+  }
+
+  .handmade__swatch {
+    width: clamp(56px, 9vw, 84px);
+  }
+}
+
+/* ------------------------------------------------ entrada
+   O braço "entra" descendo do topo; o título é escrito; quadrados e nome
+   sobem em seguida. */
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .handmade:not(.is-revealed) [data-reveal],
+  .js .handmade:not(.is-revealed) .handmade__hand {
+    opacity: 0;
+  }
+
+  .js .handmade.is-revealed [data-reveal] {
+    animation: hero-rise 1.3s var(--ease-out) var(--delay, 0s) backwards;
+  }
+
+  .js .handmade.is-revealed .handmade__hand {
+    animation: handmade-reach 1.9s var(--ease-out) 0.05s backwards;
+  }
+
+  .js .handmade.is-revealed .handmade__title img {
+    -webkit-mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+    mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+    -webkit-mask-size: 230% 100%;
+    mask-size: 230% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+    animation: hero-ink 1.8s cubic-bezier(0.55, 0.1, 0.3, 1) var(--delay) backwards;
+  }
+}
+
+@keyframes handmade-reach {
+  from {
+    opacity: 0;
+    translate: 0 -7%;
+  }
+}
+
+/* ---------------------------------------------------------------- duffle
+   Quinta dobra: camurça verde-militar em toda a dobra e, por cima, a imagem
+   sem fundo dos dois braços disputando a bolsa.
+
+   O alfa da arte encosta nas duas laterais, então ela ocupa 100% da largura:
+   cada braço termina exatamente no fim da tela. A altura da seção nunca corta
+   a imagem — em telas mais largas que 16:9 a dobra cresce junto com ela. */
+
+.duffle {
+  --art-ratio: 1672 / 941;
+  /* Faixa transparente abaixo da bolsa no PNG: 73 de 941 px de altura, ou
+     7,758% (alfa visível) — com a arte em 100vw isso dá 4,3665vw. */
+  --art-empty-bottom: 4.3665vw;
+  position: relative;
+  display: grid;
+  align-items: end;
+  min-height: max(100svh, calc(100vw * 869 / 1672 + 32px));
+  padding-top: clamp(24px, 6svh, 72px);
+  overflow: hidden;
+  isolation: isolate;
+  background: #121509;
+}
+
+.duffle__bg,
+.duffle__bg img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+}
+
+.duffle__bg img {
+  display: block;
+  object-fit: cover;
+}
+
+/* Emenda escura com a dobra de cima e vinheta suave nas bordas. */
+.duffle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgb(0 0 0 / 0.45) 0, rgb(0 0 0 / 0) clamp(80px, 12vh, 160px)),
+    radial-gradient(85% 75% at 50% 48%, rgb(0 0 0 / 0) 40%, rgb(0 0 0 / 0.42) 100%);
+}
+
+/* A bolsa encosta na base da dobra com 2 mm de folga: a margem negativa corta
+   só a faixa transparente do PNG (o overflow da seção esconde o resto). */
+.duffle__art {
+  display: block;
+  width: 100%;
+  margin-bottom: calc(2mm - var(--art-empty-bottom));
+  aspect-ratio: var(--art-ratio);
+}
+
+.duffle__art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Sombra suave para a bolsa e os braços assentarem na camurça. */
+  filter: drop-shadow(0 0.5vw 1.6vw rgb(0 0 0 / 0.42));
+}
+
+@media (max-width: 1023px) {
+  /* Em retrato a arte é baixa: a dobra acompanha a altura dela, com respiro. */
+  .duffle {
+    min-height: 0;
+    padding-top: clamp(56px, 12vh, 120px);
+  }
+}
+
+/* ------------------------------------------------ entrada */
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .duffle:not(.is-revealed) .duffle__art {
+    opacity: 0;
+  }
+
+  .js .duffle.is-revealed .duffle__art {
+    animation: duffle-art 1.8s var(--ease-out) backwards;
+  }
+}
+
+@keyframes duffle-art {
+  from {
+    opacity: 0;
+    scale: 1.035;
+  }
+}
+
+/* --------------------------------------------------------------- herança
+   Dobra em faixa (não ocupa a tela toda): título e assinatura à esquerda, os
+   quatro elementos recortados à direita, apoiados na mesma linha de base e
+   equilibrados por área visual (o build calcula --share).
+
+   Acabamento: painel de couro com filete e pesponto tracejado, como as peças
+   da marca, e uma luz quente atrás dos produtos. Tinta escura porque sobre o
+   amarelo Senna o creme sumiria. */
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('../fonts/montserrat-300-latin.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
+.heranca {
+  --ink: #17110a;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: clamp(360px, 46svh, 560px);
+  padding: clamp(44px, 6.5svh, 84px) clamp(26px, 3.4vw, 68px);
+  overflow: hidden;
+  isolation: isolate;
+  background: #f5c400;
+  color: var(--ink);
+}
+
+.heranca__bg,
+.heranca__bg img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+}
+
+.heranca__bg img {
+  display: block;
+  object-fit: cover;
+}
+
+/* Emenda com a dobra de cima, vinheta discreta e uma luz quente onde as peças
+   se apoiam. */
+.heranca::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgb(20 14 4 / 0.26) 0, rgb(20 14 4 / 0) clamp(56px, 8vh, 110px)),
+    radial-gradient(42% 62% at 68% 74%, rgb(255 241 170 / 0.4) 0%, rgb(255 241 170 / 0) 70%),
+    radial-gradient(95% 88% at 50% 45%, rgb(90 62 0 / 0) 42%, rgb(90 62 0 / 0.24) 100%);
+}
+
+/* Painel costurado: sulco contínuo na borda e, por dentro, o pesponto — pontos
+   inclinados em linha creme (como a costura das peças), cada um com a sombra
+   do furo logo abaixo. */
+.heranca::after {
+  /* Vermelho medido no couro das próprias peças (#e12c2b). */
+  --thread: rgb(225 44 43 / 0.95);
+  --hole: rgb(108 14 10 / 0.5);
+  --stitch-h: repeating-linear-gradient(108deg, var(--thread) 0 7px, rgb(0 0 0 / 0) 7px 16px);
+  --stitch-h-hole: repeating-linear-gradient(108deg, var(--hole) 0 7px, rgb(0 0 0 / 0) 7px 16px);
+  --stitch-v: repeating-linear-gradient(18deg, var(--thread) 0 7px, rgb(0 0 0 / 0) 7px 16px);
+  --stitch-v-hole: repeating-linear-gradient(18deg, var(--hole) 0 7px, rgb(0 0 0 / 0) 7px 16px);
+  content: '';
+  position: absolute;
+  /* Bem na extremidade da dobra. */
+  inset: clamp(7px, 0.9vh, 13px) clamp(8px, 0.75vw, 15px);
+  z-index: -1;
+  border: 1px solid rgb(150 36 26 / 0.3);
+  border-radius: 3px;
+  /* Cada corrida recua 20 px das pontas: os cantos ficam limpos, sem as duas
+     costuras se cruzando. */
+  background:
+    var(--stitch-h) left 18px top 7px / calc(100% - 36px) 4px no-repeat,
+    var(--stitch-h-hole) left 18px top 9.5px / calc(100% - 36px) 4px no-repeat,
+    var(--stitch-h) left 18px bottom 7px / calc(100% - 36px) 4px no-repeat,
+    var(--stitch-h-hole) left 18px bottom 4.5px / calc(100% - 36px) 4px no-repeat,
+    var(--stitch-v) left 7px top 18px / 4px calc(100% - 36px) no-repeat,
+    var(--stitch-v-hole) left 9.5px top 18px / 4px calc(100% - 36px) no-repeat,
+    var(--stitch-v) right 7px top 18px / 4px calc(100% - 36px) no-repeat,
+    var(--stitch-v-hole) right 4.5px top 18px / 4px calc(100% - 36px) no-repeat;
+  pointer-events: none;
+}
+
+.heranca__inner {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.92fr) minmax(0, 2.08fr);
+  align-items: center;
+  gap: clamp(30px, 4.5vw, 88px);
+  width: min(100%, 1720px);
+}
+
+.heranca__head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(12px, 1.6svh, 20px);
+}
+
+.heranca__title {
+  max-width: 11em;
+  margin: 0;
+  font-family: Montserrat, 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(20px, min(2.3vw, 4.4svh), 42px);
+  font-weight: 300;
+  line-height: 1.24;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+/* Fio curto entre o título e a assinatura. */
+.heranca__title::after {
+  content: '';
+  display: block;
+  width: clamp(40px, 3.4vw, 64px);
+  height: 1px;
+  margin-top: clamp(14px, 1.8svh, 22px);
+  background: rgb(23 17 10 / 0.45);
+}
+
+.heranca__by {
+  display: flex;
+  align-items: center;
+  gap: clamp(9px, 0.8vw, 15px);
+  margin: 0;
+}
+
+.heranca__byword {
+  font-family: 'Cormorant Garamond', Garamond, 'Times New Roman', serif;
+  font-size: clamp(16px, min(1.25vw, 2.4svh), 23px);
+  font-style: italic;
+  font-weight: 300;
+  color: rgb(23 17 10 / 0.72);
+}
+
+.heranca__signature {
+  display: block;
+  width: auto;
+  height: clamp(30px, min(3vw, 5.4svh), 56px);
+}
+
+/* Fileira: cada peça ocupa a fração calculada no build (mesma área visual) e
+   todas se apoiam na mesma linha de base. */
+.heranca__row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: clamp(14px, 1.8vw, 38px);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.heranca__item {
+  flex: 0 1 calc(var(--share) * 100%);
+  max-width: calc(var(--share) * 100%);
+}
+
+.heranca__item picture,
+.heranca__item img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Sombra de contato: assenta as peças no couro sem virar moldura. */
+.heranca__item img {
+  filter: drop-shadow(0 0.55vw 0.9vw rgb(86 56 0 / 0.38));
+}
+
+/* ------------------------------------------------ empilhado */
+
+@media (max-width: 1023px) {
+  .heranca {
+    min-height: 0;
+    padding-block: clamp(48px, 8vh, 84px);
+  }
+
+  .heranca__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(28px, 5vh, 52px);
+  }
+
+  .heranca__head {
+    align-items: center;
+    text-align: center;
+  }
+
+  .heranca__title {
+    max-width: none;
+    font-size: clamp(19px, 4.6vw, 34px);
+    letter-spacing: 0.14em;
+    text-indent: 0.14em;
+  }
+
+  .heranca__title::after {
+    margin-inline: auto;
+  }
+
+  /* Duas colunas, com a mesma área visual: o par mais largo define a escala. */
+  .heranca__row {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: clamp(18px, 5vw, 32px);
+  }
+
+  .heranca__item {
+    --gap: clamp(18px, 5vw, 32px);
+    flex-basis: calc(var(--share-2col) * (100% - var(--gap)));
+    max-width: calc(var(--share-2col) * (100% - var(--gap)));
+  }
+}
+
+/* ------------------------------------------------ entrada */
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .heranca:not(.is-revealed) [data-reveal],
+  .js .heranca:not(.is-revealed) .heranca__item {
+    opacity: 0;
+  }
+
+  .js .heranca.is-revealed [data-reveal],
+  .js .heranca.is-revealed .heranca__item {
+    animation: hero-rise 1.3s var(--ease-out) var(--delay, 0s) backwards;
+  }
+}
+
+/* ---------------------------------------------------------------- rodapé
+   Couro preto premium, com uma costura creme no topo emendando com a dobra
+   de cima. Três colunas: marca (monograma + assinatura + origem), coleções e
+   ateliê; embaixo, a barra com direitos e o "voltar ao topo". */
+
+.rodape {
+  --ink: #f4ede3;
+  position: relative;
+  padding: clamp(64px, 9vh, 128px) var(--gutter) clamp(28px, 4vh, 44px);
+  overflow: hidden;
+  isolation: isolate;
+  background: #0b0a09;
+  color: var(--ink);
+}
+
+.rodape__bg,
+.rodape__bg img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+}
+
+.rodape__bg img {
+  display: block;
+  object-fit: cover;
+}
+
+/* Vinheta discreta e um leve brilho no alto, para o couro não ficar chapado. */
+.rodape::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgb(0 0 0 / 0.55) 0, rgb(0 0 0 / 0) clamp(90px, 14vh, 190px)),
+    radial-gradient(70% 55% at 50% 12%, rgb(255 240 210 / 0.05), rgb(255 240 210 / 0) 70%),
+    radial-gradient(120% 95% at 50% 55%, rgb(0 0 0 / 0) 45%, rgb(0 0 0 / 0.5) 100%);
+}
+
+/* Costura na emenda com a dobra de cima: pontos inclinados, linha creme. */
+.rodape::after {
+  --thread: rgb(244 237 227 / 0.5);
+  --hole: rgb(0 0 0 / 0.55);
+  content: '';
+  position: absolute;
+  top: clamp(14px, 2.2vh, 26px);
+  right: clamp(14px, 1.4vw, 26px);
+  left: clamp(14px, 1.4vw, 26px);
+  z-index: -1;
+  height: 4px;
+  background:
+    repeating-linear-gradient(108deg, var(--thread) 0 7px, rgb(0 0 0 / 0) 7px 16px) left 0 top 0 / 100% 4px no-repeat,
+    repeating-linear-gradient(108deg, var(--hole) 0 7px, rgb(0 0 0 / 0) 7px 16px) left 0 top 2.5px / 100% 4px no-repeat;
+  pointer-events: none;
+}
+
+.rodape__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(40px, 5vw, 96px);
+  width: min(100%, 1400px);
+  margin-inline: auto;
+  padding-bottom: clamp(48px, 7vh, 88px);
+}
+
+/* ------------------------------------------------ marca */
+
+.rodape__marca {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(18px, 2.4vh, 30px);
+}
+
+.rodape__sb {
+  display: block;
+  width: auto;
+  height: clamp(54px, 5vw, 86px);
+}
+
+.rodape__assinatura {
+  display: block;
+  width: min(100%, 380px);
+  height: auto;
+}
+
+.rodape__origem {
+  display: block;
+  width: auto;
+  height: clamp(9px, 0.75vw, 13px);
+  opacity: 0.72;
+}
+
+/* ------------------------------------------------ colunas */
+
+.rodape__coluna {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(16px, 2vh, 24px);
+}
+
+/* Fio fino separando as colunas, como a divisão de um painel de couro. */
+.rodape__coluna::before {
+  content: '';
+  position: absolute;
+  top: 0.35em;
+  bottom: 0.2em;
+  left: calc(clamp(40px, 5vw, 96px) / -2);
+  width: 1px;
+  background: linear-gradient(180deg, rgb(244 237 227 / 0), rgb(244 237 227 / 0.16) 18%, rgb(244 237 227 / 0.16) 82%, rgb(244 237 227 / 0));
+}
+
+.rodape__titulo {
+  margin: 0;
+  font-family: Montserrat, 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(10px, 0.62vw, 12px);
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgb(244 237 227 / 0.68);
+}
+
+.rodape__lista {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Índice das coleções, como numa ficha de ateliê. */
+.rodape__indice {
+  font-family: Montserrat, 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(9px, 0.58vw, 11px);
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  /* 0,7 mantém o número acima de 4,5:1 sobre o trecho mais claro do couro. */
+  color: rgb(244 237 227 / 0.7);
+  transition: color 0.4s ease;
+}
+
+.rodape__lista a:hover .rodape__indice,
+.rodape__lista a:focus-visible .rodape__indice {
+  color: rgb(244 237 227 / 0.75);
+}
+
+/* Índice: número, nome e um fio por linha — como a lista de peças de uma
+   ficha de ateliê. O nome desliza e o fio acende no hover. */
+.rodape__lista a {
+  display: grid;
+  grid-template-columns: 2.6em 1fr;
+  align-items: baseline;
+  padding-block: clamp(9px, 1.1vh, 14px);
+  border-bottom: 1px solid rgb(244 237 227 / 0.12);
+  color: rgb(244 237 227 / 0.86);
+  text-decoration: none;
+  transition:
+    border-color 0.4s ease,
+    color 0.4s ease;
+}
+
+.rodape__lista li:last-child a {
+  border-bottom: 0;
+}
+
+.rodape__nome {
+  display: block;
+  font-family: 'Cormorant Garamond', Garamond, 'Times New Roman', serif;
+  font-size: clamp(18px, 1.15vw, 22px);
+  font-weight: 300;
+  line-height: 1.25;
+  transition: translate 0.5s var(--ease-out);
+}
+
+.rodape__lista a:hover,
+.rodape__lista a:focus-visible {
+  border-color: rgb(244 237 227 / 0.4);
+  color: var(--ink);
+}
+
+.rodape__lista a:hover .rodape__nome,
+.rodape__lista a:focus-visible .rodape__nome {
+  translate: 5px 0;
+}
+
+/* "Voltar ao topo" mantém o fio que cresce. */
+.rodape__topo {
+  position: relative;
+  display: inline-block;
+  font-family: 'Cormorant Garamond', Garamond, 'Times New Roman', serif;
+  font-weight: 300;
+  line-height: 1.3;
+  text-decoration: none;
+  transition: color 0.4s ease;
+}
+
+.rodape__topo::after {
+  content: '';
+  position: absolute;
+  bottom: -0.16em;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+  scale: 0 1;
+  transform-origin: left center;
+  transition: scale 0.5s var(--ease-out);
+}
+
+.rodape__topo:hover {
+  color: var(--ink);
+}
+
+.rodape__topo:hover::after,
+.rodape__topo:focus-visible::after {
+  scale: 1 1;
+}
+
+.rodape__lista a:focus-visible,
+.rodape__topo:focus-visible {
+  outline: 1px solid rgb(244 237 227 / 0.6);
+  outline-offset: 6px;
+}
+
+/* Ficha: rótulo em caixa-alta e a informação embaixo. */
+.rodape__ficha {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.6vh, 20px);
+  width: 100%;
+  margin: 0;
+}
+
+.rodape__campo dt {
+  font-family: Montserrat, 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(9px, 0.58vw, 11px);
+  font-weight: 300;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgb(244 237 227 / 0.56);
+}
+
+.rodape__campo dd {
+  max-width: 26ch;
+  margin: 0.35em 0 0;
+  font-family: 'Cormorant Garamond', Garamond, 'Times New Roman', serif;
+  font-size: clamp(17px, 1.1vw, 21px);
+  font-weight: 300;
+  line-height: 1.35;
+  text-wrap: pretty;
+  color: rgb(244 237 227 / 0.84);
+}
+
+.rodape__valores {
+  display: block;
+  width: auto;
+  height: clamp(8px, 0.68vw, 12px);
+  opacity: 0.6;
+}
+
+/* ------------------------------------------------ barra final */
+
+.rodape__base {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(100%, 1400px);
+  margin-inline: auto;
+  padding-top: clamp(20px, 3vh, 32px);
+  border-top: 1px solid rgb(244 237 227 / 0.12);
+}
+
+.rodape__direitos {
+  margin: 0;
+  font-family: Montserrat, 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(9.5px, 0.6vw, 11.5px);
+  font-weight: 300;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(244 237 227 / 0.5);
+}
+
+.rodape__topo {
+  font-size: clamp(15px, 0.95vw, 18px);
+  color: rgb(244 237 227 / 0.7);
+}
+
+@media (max-width: 1023px) {
+  .rodape {
+    padding-top: clamp(56px, 8vh, 96px);
+    text-align: center;
+  }
+
+  /* Alvo de toque confortável nos links. */
+  .rodape__lista a,
+  .rodape__topo {
+    padding-block: 10px;
+  }
+
+  .rodape__lista {
+    gap: 2px;
+  }
+
+  .rodape__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(36px, 6vh, 56px);
+    justify-items: center;
+  }
+
+  .rodape__marca,
+  .rodape__coluna {
+    align-items: center;
+  }
+
+  .rodape__coluna::before {
+    display: none;
+  }
+
+  .rodape__lista a {
+    grid-template-columns: 2.6em 1fr;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .rodape__ficha {
+    align-items: center;
+    text-align: center;
+  }
+
+  .rodape__campo dd {
+    max-width: 30ch;
+    margin-inline: auto;
+  }
+
+  .rodape__texto {
+    max-width: 34ch;
+  }
+
+  .rodape__base {
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+/* ------------------------------------------------ entrada */
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .rodape:not(.is-revealed) [data-reveal] {
+    opacity: 0;
+  }
+
+  .js .rodape.is-revealed [data-reveal] {
+    animation: hero-rise 1.3s var(--ease-out) var(--delay, 0s) backwards;
+  }
+}

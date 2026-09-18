@@ -13,6 +13,8 @@
 //      npm run build -- --force (regera tudo)
 
 import sharp from 'sharp';
+import { createHash } from 'node:crypto';
+import { readdir, rm } from 'node:fs/promises';
 import { buildAtelier } from './atelier.mjs';
 import { buildLuxury } from './luxury.mjs';
 import { buildHandmade } from './handmade.mjs';
@@ -284,5 +286,18 @@ html = replaceBetween(html, 'heranca-signature', heranca.signature);
 html = replaceBetween(html, 'heranca-items', heranca.items);
 html = replaceBetween(html, 'duffle-bg', duffle.background);
 html = replaceBetween(html, 'duffle-art', duffle.art);
+// Carimbo de versão no CSS: os assets são cacheados por um ano, e sem o
+// carimbo o navegador continuaria servindo a folha de estilo antiga.
+const css = await readFile(`${ROOT}assets/css/styles.css`);
+const carimbo = createHash('sha256').update(css).digest('hex').slice(0, 8);
+for (const arquivo of await readdir(`${ROOT}assets/css`)) {
+  if (/^styles\.[0-9a-f]{8}\.css$/.test(arquivo) && arquivo !== `styles.${carimbo}.css`) {
+    await rm(`${ROOT}assets/css/${arquivo}`);
+  }
+}
+await writeFile(`${ROOT}assets/css/styles.${carimbo}.css`, css);
+html = html.replace(/href="assets\/css\/styles(?:\.[0-9a-f]{8})?\.css"/, `href="assets/css/styles.${carimbo}.css"`);
+console.log(`css: styles.${carimbo}.css`);
+
 await writeFile(`${ROOT}index.html`, html);
 console.log(`index.html atualizado (${(Buffer.byteLength(html) / 1024).toFixed(0)} KB)`);
